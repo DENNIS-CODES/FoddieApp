@@ -1,4 +1,4 @@
-package com.example.hamzafood;
+package com.example.FoodieApp;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
