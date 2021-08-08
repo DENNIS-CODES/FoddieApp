@@ -23,9 +23,7 @@ import com.google.firebase.auth.PhoneAuthProvider;
 
 import java.util.concurrent.TimeUnit;
 
-
-public class Admin_sendotp extends AppCompatActivity {//create a new class with the existing class’s functionality
-
+public class Admin_VerifyPhone extends AppCompatActivity {
     String verificationId;
     FirebaseAuth FAuth;
     Button verify , Resend ;
@@ -34,46 +32,46 @@ public class Admin_sendotp extends AppCompatActivity {//create a new class with 
     String phoneno;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {//recreate the activity and load all data from savedInstanceState
-        super.onCreate(savedInstanceState);//Bundle class is used to stored the data of activity whenever above condition occur in app
-        setContentView(R.layout.activity_admin_sent_sendotp);//R means Resource. layout means design . main is the xml you have created under res->layout->main.xml. Whenever you want to change the current look 
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_admin_veirfy_phone);//view admin verify phone layout
 
-        phoneno = getIntent().getStringExtra("Phonenum").trim();// An Intent is a messaging object that can be used to request an action from one app component to another app component.
-//findViewById is a method that finds the view from the layout resource file that are attached with current Activity. 
-        entercode = (EditText) findViewById(R.id.code1);
-        txt = (TextView) findViewById(R.id.text1);
-        Resend = (Button)findViewById(R.id.Resendotp1);
-        verify = (Button) findViewById(R.id.Verify1);
+        phoneno = getIntent().getStringExtra("phonenumber").trim();//how to retrive extended data
+//View is a class where all the widgets are defined. findViewById is the method that finds the View by the ID it is given.
+        entercode = (EditText) findViewById(R.id.Dcode);
+        txt = (TextView) findViewById(R.id.textt);
+        Resend = (Button)findViewById(R.id.Resendcode);
+        verify = (Button) findViewById(R.id.Verifycode);
         FAuth = FirebaseAuth.getInstance();
-//.setVisibility This view is invisible, but it still takes up space for layout purposes.
+
         Resend.setVisibility(View.INVISIBLE);
         txt.setVisibility(View.INVISIBLE);
 
-        sendverificationcode(phoneno);//verifys number
+        sendverificationcode(phoneno);
 
-        verify.setOnClickListener(new View.OnClickListener() {//setOnClickListener() is a method that needs a object of type onClickListener. 
+        verify.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {//onclicking do /  get
+            public void onClick(View v) {
 
                 String code = entercode.getText().toString().trim();
-                Resend.setVisibility(View.INVISIBLE);
-           //catching execption
+                Resend.setVisibility(View.INVISIBLE);//The View is invisible to the user, but still takes up space in the layout
+
                 if (code.isEmpty() && code.length()<6){
                     entercode.setError("Enter code");
-                    entercode.requestFocus();//it will automatically select defined Requestfocus editText and open keypad so application user can directly insert data into editText box
+                    entercode.requestFocus();
                     return;
                 }
-                verifyCode(code);verify code
+                verifyCode(code);
             }
         });
 
         new CountDownTimer(60000,1000){
 
             @Override
-            public void onTick(long millisUntilFinished) {//It updates time info and checks whether the application is in a preparation mode.
-//.setVisibility This view is invisible, but it still takes up space for layout purposes.
+            public void onTick(long millisUntilFinished) {
+
                 txt.setVisibility(View.VISIBLE);
-                txt.setText("Resend Code Within "+millisUntilFinished/1000+" Seconds");
+                txt.setText("Resend Code Within"+millisUntilFinished/1000+"Seconds");
 
             }
 
@@ -90,9 +88,9 @@ public class Admin_sendotp extends AppCompatActivity {//create a new class with 
 
         Resend.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {//on click view phone no
+            public void onClick(View v) {
 
-                Resend.setVisibility(View.INVISIBLE);//.setVisibility This view is invisible, but it still takes up space for layout purposes.
+                Resend.setVisibility(View.INVISIBLE);
                 Resendotp(phoneno);
 
                 new CountDownTimer(60000,1000){
@@ -120,17 +118,15 @@ public class Admin_sendotp extends AppCompatActivity {//create a new class with 
 
 
     }
-
-    private void Resendotp(String phonenum) {//Resend verification no action
+    private void Resendotp(String phonenum) {
 
         sendverificationcode(phonenum);
     }
 
-
     private void sendverificationcode(String number) {
 
-        PhoneAuthProvider.getInstance().verifyPhoneNumber(//gets another code from fire base
-//time taken
+        PhoneAuthProvider.getInstance().verifyPhoneNumber(
+
                 number,
                 60,
                 TimeUnit.SECONDS,
@@ -139,20 +135,20 @@ public class Admin_sendotp extends AppCompatActivity {//create a new class with 
         );
     }
 
-    private PhoneAuthProvider.OnVerificationStateChangedCallbacks mcallBack=new PhoneAuthProvider.OnVerificationStateChangedCallbacks(){
+    private PhoneAuthProvider.OnVerificationStateChangedCallbacks allBack=new PhoneAuthProvider.OnVerificationStateChangedCallbacks(){
         @Override
         public void onVerificationCompleted(@NonNull PhoneAuthCredential phoneAuthCredential) {
-        //if verification is successful
+
             String code = phoneAuthCredential.getSmsCode();
             if(code != null){
                 entercode.setText(code);  // Auto Verification
                 verifyCode(code);
             }
         }
-       //if verification fails
+
         @Override
         public void onVerificationFailed(@NonNull FirebaseException e) {
-            Toast.makeText(Admin_sendotp.this , e.getMessage(),Toast.LENGTH_LONG).show();
+            Toast.makeText(Admin_VerifyPhone.this , e.getMessage(),Toast.LENGTH_LONG).show();
 
         }
 
@@ -168,26 +164,27 @@ public class Admin_sendotp extends AppCompatActivity {//create a new class with 
     private void verifyCode(String code) {
 
         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId , code);
-        signInWithPhone(credential);
+        linkCredential(credential);
     }
 
-    private void signInWithPhone(PhoneAuthCredential credential) {
+    private void linkCredential(PhoneAuthCredential credential) {
 
-        FAuth.signInWithCredential(credential)
-                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+        FAuth.getCurrentUser().linkWithCredential(credential)
+                .addOnCompleteListener(Admin_VerifyPhone.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
 
                         if(task.isSuccessful()){
-                            startActivity(new Intent(Admin_sendotp.this,AdminFoodPanel_BottomNavigation.class));
+
+                            Intent intent = new Intent(Admin_VerifyPhone.this , MainMenu.class);
+                            startActivity(intent);
                             finish();
-
                         }else{
-                            ReusableCodeForAll.ShowAlert(Admin_sendotp.this,"Error",task.getException().getMessage());
+                            ReusableCodeForAll.ShowAlert(Admin_VerifyPhone.this,"Error",task.getException().getMessage());
                         }
-
                     }
                 });
 
     }
+
 } 
